@@ -202,9 +202,11 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
   if (empty($dedupeGroupeMapping)) {
     return;
   }
+
+  $component = $dedupeGroupID = NULL;
+
   foreach ($backTraces as $backtrace) {
     $class = $backtrace['class'];
-    $component = NULL;
     if (in_array($class, ['CRM_Contribute_Form_Contribution_Main', 'CRM_Contribute_Form_Contribution_Confirm'])) {
       $component = 'contribute';
       $dedupeGroupID = $dedupeGroupeMapping['dedupesetting_contribute'];
@@ -225,8 +227,8 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
       break;
     }
   }
-  // is it coming from mapped component ?
-  if (empty($component)) {
+  // primary dedupe rule has to be present for any component, fallback dedupe is optional.
+  if (empty($dedupeGroupID)) {
     return;
   }
   try {
@@ -245,13 +247,12 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
         $dedupeParams['rule_group_id'] = $dedupeGroupIDFallback;
         $dedupeParams['rule'] = CRM_Core_DAO::getFieldValue('CRM_Dedupe_DAO_RuleGroup', $dedupeGroupIDFallback, 'used');
       }
-      // Run the "standard" dedupe routine. This will return one or more contact IDs based on the unsupervised dedupe rule
+
       $dedupeResults['ids'] = CRM_Dedupe_Finder::dupesByParams($dedupeParams, $dedupeParams['contact_type'],
         $dedupeParams['rule'], $dedupeParams['excluded_contact_ids'], $dedupeParams['rule_group_id']);
     }
 
-    // if we found duplicate contact, let the main function know that, contact founnd, so that it does not processe
-    // again
+    // if we found duplicate contact, let the main function know that, contact found, so that it does not process again
     if (!empty($dedupeResults['ids'])) {
       $dedupeResults['handled'] = TRUE;
     }
