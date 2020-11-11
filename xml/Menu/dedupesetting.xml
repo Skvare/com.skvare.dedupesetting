@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/admin/dedupesettings</path>
+    <page_callback>CRM_Dedupesetting_Form_Settings</page_callback>
+    <title>Dedupe Custom Settings</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
+</menu>
