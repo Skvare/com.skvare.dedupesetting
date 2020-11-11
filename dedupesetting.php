@@ -184,8 +184,6 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
     return;
   }
 
-  // get the traces of call.
-  $backTraces = debug_backtrace();
   $domainID = CRM_Core_Config::domainID();
   $settings = Civi::settings($domainID);
   $elementNames = [
@@ -204,6 +202,17 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
   }
 
   $component = $dedupeGroupID = NULL;
+
+  // get the traces of call.
+  /*
+   $context is not used in most of the call other than event functionality, so we can not rely on $context value.
+  So how to know the functionality is get called from profile or contribution page or uf match, only way is to trace the
+  call, and then check certain class present in trace. if present then we assume that call was originated from certain
+  component.
+
+  Also we can not make changes in core for our custom requirement.
+   */
+  $backTraces = debug_backtrace();
 
   foreach ($backTraces as $backtrace) {
     $class = $backtrace['class'];
