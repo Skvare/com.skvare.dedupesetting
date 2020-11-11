@@ -38,5 +38,5 @@ cv en dedupesetting
 
 ## Usage
 
-Visit civicrm/admin/dedupesettings?reset=1 for Dedue configuration.
+Visit civicrm/admin/dedupesettings?reset=1 for Dedupe configuration.
 
