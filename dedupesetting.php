@@ -217,22 +217,50 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
   foreach ($backTraces as $backtrace) {
     $class = $backtrace['class'];
     if (in_array($class, ['CRM_Contribute_Form_Contribution_Main', 'CRM_Contribute_Form_Contribution_Confirm'])) {
-      $component = 'contribute';
+      // Common Dedupe Rule setting
       $dedupeGroupID = $dedupeGroupeMapping['dedupesetting_contribute'];
       $dedupeGroupIDFallback = $dedupeGroupeMapping['dedupesetting_profile_fallback'];
+
+      // Contribution Page Id specific setting
+      $contributionPageID = NULL;
+      if ($backtrace['function'] == 'formRule') {
+        $contributionPageID = $backtrace['args']['2']->getVar('_id');
+        $domainID = CRM_Core_Config::domainID();
+        $settings = Civi::settings($domainID);
+        if ($settings->get('contribute_dedupe_rule_group_id_' . $contributionPageID)) {
+          $dedupeGroupID = $settings->get('contribute_dedupe_rule_group_id_' . $contributionPageID);
+        }
+      }
+      elseif ($class == 'CRM_Contribute_Form_Contribution_Confirm' && $backtrace['function'] == 'processFormSubmission') {
+        $contributionPageID = $backtrace['object']->getVar('_id');
+        $domainID = CRM_Core_Config::domainID();
+        $settings = Civi::settings($domainID);
+        if ($settings->get('contribute_dedupe_rule_group_id_' . $contributionPageID)) {
+          $dedupeGroupID = $settings->get('contribute_dedupe_rule_group_id_' . $contributionPageID);
+        }
+      }
       break;
     }
     elseif (in_array($class, ['CRM_Core_BAO_UFMatch'])) {
-      $component = 'ufmatch';
       $dedupeGroupID = $dedupeGroupeMapping['dedupesetting_ufmatch'];
       $dedupeGroupIDFallback = $dedupeGroupeMapping['dedupesetting_contribute_fallback'];
       break;
     }
     elseif (in_array($class, ['CRM_Profile_Form'])) {
-      $component = 'profile';
+      // Common Dedupe Rule setting
       $dedupeGroupID = $dedupeGroupeMapping['dedupesetting_profile'];
       $dedupeGroupIDFallback = $dedupeGroupeMapping['dedupesetting_profile_fallback'];
 
+      // Profile Id specific setting
+      $profileID = NULL;
+      if ($backtrace['function'] == 'handleDuplicateChecking') {
+        $profileID = $backtrace['args']['2']->getVar('_gid');
+        $domainID = CRM_Core_Config::domainID();
+        $settings = Civi::settings($domainID);
+        if ($settings->get('profile_dedupe_rule_group_id_' . $profileID)) {
+          $dedupeGroupID = $settings->get('profile_dedupe_rule_group_id_' . $profileID);
+        }
+      }
       break;
     }
   }
@@ -247,6 +275,7 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
       $dedupeParams['rule_group_id'] = $dedupeGroupID;
       $dedupeParams['rule'] = CRM_Core_DAO::getFieldValue('CRM_Dedupe_DAO_RuleGroup', $dedupeGroupID, 'used');
     }
+
     $dedupeResults['ids'] = CRM_Dedupe_Finder::dupesByParams($dedupeParams, $dedupeParams['contact_type'],
       $dedupeParams['rule'], $dedupeParams['excluded_contact_ids'], $dedupeParams['rule_group_id']);
 
@@ -274,4 +303,64 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
     return;
   }
 
+}
+
+
+function dedupesetting_civicrm_buildForm($formName, &$form) {
+  if ($formName == 'CRM_UF_Form_Group') {
+    $form->addElement('select', 'profile_dedupe_rule_group_id', ts('Duplicate matching rule'), _dedupesetting_rules());
+    if ($form->_action & CRM_Core_Action::UPDATE) {
+      $domainID = CRM_Core_Config::domainID();
+      $settings = Civi::settings($domainID);
+      $form->setDefaults(['profile_dedupe_rule_group_id' => $settings->get('profile_dedupe_rule_group_id_' . $form->getVar('_id'))]);
+    }
+  }
+  elseif ($formName == 'CRM_Contribute_Form_ContributionPage_Custom') {
+    $form->addElement('select', 'contribute_dedupe_rule_group_id', ts('Duplicate matching rule'), _dedupesetting_rules());
+    if ($form->_action & CRM_Core_Action::UPDATE) {
+      $domainID = CRM_Core_Config::domainID();
+      $settings = Civi::settings($domainID);
+      $form->setDefaults(['contribute_dedupe_rule_group_id' => $settings->get('contribute_dedupe_rule_group_id_' . $form->getVar('_id'))]);
+    }
+  }
+}
+
+/**
+ * Implementation of hook_civicrm_postProcess
+ */
+function dedupesetting_civicrm_postProcess($formName, &$form) {
+  if ($formName == 'CRM_UF_Form_Group') {
+    if ($form->_id) {
+      $id = $form->_id;
+    }
+    else {
+      $id = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFGroup', $form->_submitValues['title'], 'id', 'title');
+    }
+    if ($id) {
+      $profile_dedupe_rule_group_id = $form->_submitValues['profile_dedupe_rule_group_id'] ?? NULL;
+      $domainID = CRM_Core_Config::domainID();
+      $settings = Civi::settings($domainID);
+      $settings->set('profile_dedupe_rule_group_id_' . $id, $profile_dedupe_rule_group_id);
+    }
+  }
+  elseif ($formName == 'CRM_Contribute_Form_ContributionPage_Custom') {
+    if ($form->getVar('_id')) {
+      $contribute_dedupe_rule_group_id = $form->_submitValues['contribute_dedupe_rule_group_id'] ?? NULL;
+      $domainID = CRM_Core_Config::domainID();
+      $settings = Civi::settings($domainID);
+      $settings->set('contribute_dedupe_rule_group_id_' . $form->getVar('_id'), $contribute_dedupe_rule_group_id);
+    }
+  }
+}
+
+function _dedupesetting_rules() {
+  $query = "SELECT id, used, title FROM civicrm_dedupe_rule_group WHERE contact_type = 'Individual'";
+  $dao = CRM_Core_DAO::executeQuery($query);
+  $dedupeGroup = [];
+  while ($dao->fetch()) {
+    $dedupeGroup[$dao->id] = $dao->title . ' - ( ' . $dao->used . ' )';
+  }
+  $dedupeGroup = ['' => '-- select --'] + $dedupeGroup;
+
+  return $dedupeGroup;
 }
