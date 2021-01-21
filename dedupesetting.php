@@ -241,7 +241,7 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
       }
       break;
     }
-    elseif (in_array($class, ['CRM_Core_BAO_UFMatch'])) {
+    elseif (in_array($class, ['CRM_Core_BAO_UFMatch', 'CRM_Contact_Form_Task_Useradd'])) {
       $dedupeGroupID = $dedupeGroupeMapping['dedupesetting_ufmatch'];
       $dedupeGroupIDFallback = $dedupeGroupeMapping['dedupesetting_contribute_fallback'];
       break;
