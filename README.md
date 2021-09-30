@@ -2,9 +2,10 @@
 
 ![Screenshot](/images/screenshot.png)
 
-Functionality to change Deupe rule on different civicrm component which are hardcoded in civicrm core. This extension
- provide custom setting to change dedupe rule for profile, civicrm contribution page and uf match sync process.
- 
+Functionality to change Dedupe rule on different civicrm components which are 
+hardcoded in civicrm core. This extension provides custom setting to change 
+dedupe rule for profile, civicrm contribution page and uf match sync process. 
+
 ## Requirements
 
 * PHP v7.0+
@@ -50,9 +51,9 @@ Each profile would have their dedupe setting.
 
 
 ###Contribution Page ID Specific Setting:
-if you want Contribution page ID specific Dedupe rule, Visit 'Manage Contribution Pages' -> Configure -> Include Profile
+If you want Contribution page ID specific Dedupe rule, Visit 'Manage Contribution Pages' -> Configure -> Include Profile
 
-You will see Dedupe Rule dropdown list. you can choose the rule as per fields available in the included profile.
+You will see the Dedupe Rule dropdown list. you can choose the rule as per fields available in the included profile.
 
 Each Contribution page would have their dedupe setting.
 

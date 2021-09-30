@@ -143,17 +143,6 @@ function dedupesetting_civicrm_themes(&$themes) {
   _dedupesetting_civix_civicrm_themes($themes);
 }
 
-// --- Functions below this ship commented out. Uncomment as required. ---
-
-/**
- * Implements hook_civicrm_preProcess().
- *
- * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_preProcess
- */
-//function dedupesetting_civicrm_preProcess($formName, &$form) {
-//
-//}
-
 /**
  * Implements hook_civicrm_navigationMenu().
  *
@@ -174,8 +163,10 @@ function dedupesetting_civicrm_navigationMenu(&$menu) {
 /**
  * Implements hook_civicrm_findDuplicates().
  *
- * When submitting an online event registration page we check for duplicate contacts based on specific groups
- *  as specified in the event custom field 'duplicate_if_in_groups'
+ * When submitting an online payment page we check for duplicate contacts based
+ * on specific groups as specified in the event custom field
+ * 'duplicate_if_in_groups'
+ *
  */
 function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $context) {
 
@@ -201,7 +192,7 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
     return;
   }
 
-  $component = $dedupeGroupID = NULL;
+  $dedupeGroupID = NULL;
 
   // get the traces of call.
   /*
@@ -227,7 +218,8 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
         $contributionPageID = $backtrace['args']['2']->getVar('_id');
         $domainID = CRM_Core_Config::domainID();
         $settings = Civi::settings($domainID);
-        if ($settings->get('contribute_dedupe_rule_group_id_' . $contributionPageID)) {
+        if (!empty($contributionPageID) &&
+          $settings->get('contribute_dedupe_rule_group_id_' . $contributionPageID)) {
           $dedupeGroupID = $settings->get('contribute_dedupe_rule_group_id_' . $contributionPageID);
         }
       }
@@ -235,7 +227,8 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
         $contributionPageID = $backtrace['object']->getVar('_id');
         $domainID = CRM_Core_Config::domainID();
         $settings = Civi::settings($domainID);
-        if ($settings->get('contribute_dedupe_rule_group_id_' . $contributionPageID)) {
+        if (!empty($contributionPageID) &&
+          $settings->get('contribute_dedupe_rule_group_id_' . $contributionPageID)) {
           $dedupeGroupID = $settings->get('contribute_dedupe_rule_group_id_' . $contributionPageID);
         }
       }
@@ -257,14 +250,16 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
         $profileID = $backtrace['args']['2']->getVar('_gid');
         $domainID = CRM_Core_Config::domainID();
         $settings = Civi::settings($domainID);
-        if ($settings->get('profile_dedupe_rule_group_id_' . $profileID)) {
+        if (!empty($profileID) &&
+          $settings->get('profile_dedupe_rule_group_id_' . $profileID)) {
           $dedupeGroupID = $settings->get('profile_dedupe_rule_group_id_' . $profileID);
         }
       }
       break;
     }
   }
-  // primary dedupe rule has to be present for any component, fallback dedupe is optional.
+  // Primary dedupe rule has to be present for any component, fallback dedupe
+  // is optional.
   if (empty($dedupeGroupID)) {
     return;
   }
@@ -279,7 +274,7 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
     $dedupeResults['ids'] = CRM_Dedupe_Finder::dupesByParams($dedupeParams, $dedupeParams['contact_type'],
       $dedupeParams['rule'], $dedupeParams['excluded_contact_ids'], $dedupeParams['rule_group_id']);
 
-    // in case duplicate contact does not found, try fallback dedupe rule
+    // In case duplicate contact does not found, try fallback dedupe rule
     if (empty($dedupeResults['ids'])) {
       if ($dedupeGroupIDFallback) {
         $dedupeParams['rule_group_id'] = $dedupeGroupIDFallback;
@@ -305,7 +300,9 @@ function dedupesetting_civicrm_findDuplicates($dedupeParams, &$dedupeResults, $c
 
 }
 
-
+/**
+ * Implementation of hook_civicrm_buildForm
+ */
 function dedupesetting_civicrm_buildForm($formName, &$form) {
   if ($formName == 'CRM_UF_Form_Group') {
     $form->addElement('select', 'profile_dedupe_rule_group_id', ts('Duplicate matching rule'), _dedupesetting_rules());
@@ -353,6 +350,11 @@ function dedupesetting_civicrm_postProcess($formName, &$form) {
   }
 }
 
+/**
+ * Function to return list Individual dedupe rules.
+ *
+ * @return array
+ */
 function _dedupesetting_rules() {
   $query = "SELECT id, used, title FROM civicrm_dedupe_rule_group WHERE contact_type = 'Individual'";
   $dao = CRM_Core_DAO::executeQuery($query);
