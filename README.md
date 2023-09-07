@@ -2,9 +2,9 @@
 
 ![Screenshot](/images/screenshot.png)
 
-Functionality to change Dedupe rule on different civicrm components which are 
-hardcoded in civicrm core. This extension provides custom setting to change 
-dedupe rule for profile, civicrm contribution page and uf match sync process. 
+Functionality to change the Dedupe rule on different civicrm components that are
+hardcoded in the civicrm core. This extension provides a custom setting to change
+the duplicate rule for the profile, civicrm contribution page, and UF match sync process.
 
 ## Requirements
 
@@ -39,31 +39,31 @@ cv en dedupesetting
 
 Visit civicrm/admin/dedupesettings?reset=1 for Dedupe configuration.
 
-This page provide your general setting to override Dedupe Rule for specific Component.
+This page provides your general setting to override the Dedupe Rule for a specific component.
 
 ###Profile ID specific Setting
-if you want profile ID specific Dedupe rule, Visit Profile Setting form then expand 'Advanced Settings' pannel,
-You will see Dedupe Rule dropdown list. you can choose the rule as per fields available in the profile.
+If you want a profile ID-specific Dedupe rule, visit the Profile Setting form, then expand the 'Advanced Settings' panel.
+You will see the Dedupe Rule drop-down list. You can choose the rule as per the fields available in the profile.
 
-Each profile would have their dedupe setting.
+Each profile would have its own default setting.
 
 ![Screenshot](/images/profile_setting.png)
 
 
 ###Contribution Page ID Specific Setting:
-If you want Contribution page ID specific Dedupe rule, Visit 'Manage Contribution Pages' -> Configure -> Include Profile
+If you want a contribution page ID-specific dedupe rule, visit 'Manage Contribution Pages' -> Configure -> Include Profile
 
-You will see the Dedupe Rule dropdown list. you can choose the rule as per fields available in the included profile.
+You will see the Dedupe Rule drop-down list. You can choose the rule as per the fields available in the included profile.
 
-Each Contribution page would have their dedupe setting.
+Each contribution page would have its own setting.
 
 ![Screenshot](/images/contribution_page_setting.png)
 
 
-Here is overall workflow:
+Here is the overall workflow:
 
-* Look for Page/form specific Dedupe Setting , if Rule configured then find the matching contact.
-* If above step unable to find matching contact then General Dedupe setting get used.
-* If there is fallback Dedupe Rule configured then it get used in case Main Rule configured in General setting unable
- to find matching contact.
+* Look for a page- or form-specific duplicate setting; if a rule is configured, then find the matching contact.
+* If the above step is unable to find a matching contact, then the General Dedupe setting will be used.
+* If there is a fallback Dedupe Rule configured, then it gets used in case the Main Rule is configured in the General setting but is unable to
+  to find matching contacts.
 
